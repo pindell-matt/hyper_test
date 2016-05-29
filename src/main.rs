@@ -1,25 +1,40 @@
 extern crate hyper;
+extern crate url;
+extern crate rustc_serialize;
 
+use rustc_serialize::Encodable;
+use rustc_serialize::json::{self, Encoder};
+
+use url::form_urlencoded;
 use std::io::Read;
-use std::env;
+use hyper::{Client};
 
-use hyper::Client;
-use hyper::header::Connection;
+fn get_content(url: &str) -> hyper::Result<String> {
+    let client = Client::new();
+    let mut response = try!(client.get(url).send());
+    let mut buf = String::new();
+    try!(response.read_to_string(&mut buf));
+    Ok(buf)
+}
+
+fn post_query(url: &str) -> hyper::Result<String> {
+    let client = Client::new();
+    let mut response = try!(client.post(url).send());
+    let mut buf = String::new();
+    try!(response.read_to_string(&mut buf));
+    Ok(buf)
+}
 
 fn main() {
-    let args: Vec<_> = env::args().collect();
-
-    let url: String = args[1].to_owned();
-    let url_slice: &str = &url[..];
-
-    let mut client = Client::new();
-
-    let mut res = client.get(url_slice)
-        .header(Connection::close())
-        .send().unwrap();
-
-    let mut body = String::new();
-    res.read_to_string(&mut body).unwrap();
-
-    println!("Response: {}", body);
+    // println!("{:?}", post_query("http://universe.rejs.io/api/v1/data").unwrap());
+    // println!("{:?}", get_content("http://universe.rejs.io/api/v1/data").unwrap());
+    
+    let new_request = get_content("http://universe.rejs.io/api/v1/data").unwrap();
+    if let Ok(request_json) = json::Json::from_str(&new_request) {
+        if let Some(ref atom) = request_json[0].find("atom") {
+            if let Some(ref electrons) = atom.find("electrons") {
+                println!("Electrons: {}", electrons);
+            }
+        }
+    }
 }
