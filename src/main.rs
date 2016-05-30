@@ -28,12 +28,14 @@ fn post_query(url: &str) -> hyper::Result<String> {
 fn main() {
     // println!("{:?}", post_query("http://universe.rejs.io/api/v1/data").unwrap());
     // println!("{:?}", get_content("http://universe.rejs.io/api/v1/data").unwrap());
-    
+
     let new_request = get_content("http://universe.rejs.io/api/v1/data").unwrap();
     if let Ok(request_json) = json::Json::from_str(&new_request) {
-        if let Some(ref atom) = request_json[0].find("atom") {
-            if let Some(ref electrons) = atom.find("electrons") {
-                println!("Electrons: {}", electrons);
+        for i in 0..50 {
+            if let Some(ref atom) = request_json[i].find("atom") {
+                if let Some(ref electrons) = atom.find("electrons") {
+                    println!("Electrons: {}", electrons);
+                }
             }
         }
     }
